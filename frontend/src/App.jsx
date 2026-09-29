@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { setTokens } from "./api";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -3066,6 +3067,7 @@ function AuthShell({ children, goLanding }) {
   );
 }
 
+
 function Login({ goSignup, goLanding, goForgot, onSuccess, mensagemSucesso }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -3076,8 +3078,18 @@ function Login({ goSignup, goLanding, goForgot, onSuccess, mensagemSucesso }) {
     e.preventDefault();
     setErro("");
     setCarregando(true);
+
     try {
       const data = await authApi.login({ email, senha });
+
+      setTokens({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      });
+
+      localStorage.setItem("usuario", JSON.stringify(data.usuario));
+      localStorage.setItem("oficina", JSON.stringify(data.oficina));
+
       onSuccess(data);
     } catch (err) {
       setErro(err.message);
@@ -3085,6 +3097,9 @@ function Login({ goSignup, goLanding, goForgot, onSuccess, mensagemSucesso }) {
       setCarregando(false);
     }
   };
+}
+```
+
 
   return (
     <AuthShell goLanding={goLanding}>
