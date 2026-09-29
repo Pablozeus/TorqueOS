@@ -1,0 +1,419 @@
+// Schema Prisma - TorqueOS
+// Multi-tenant: toda tabela de negocio carrega oficinaId, garantindo isolamento
+// total de dados entre oficinas. O isolamento tambem e reforcado na camada de
+// aplicacao (todo find/update/delete filtra por oficinaId vindo do JWT).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Plataforma / Tenant =====
+
+enum StatusOficina {
+  TESTE
+  ATIVA
+  BLOQUEADA
+  CANCELADA
+}
+
+model Oficina {
+  id              String         @id @default(cuid())
+  nome            String
+  cnpj            String?
+  email           String
+  telefone        String?
+  status          StatusOficina  @default(TESTE)
+  trialEndsAt     DateTime?
+  asaasCustomerId String?        // id do cliente no Asaas (criado na 1a assinatura)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  usuarios      Usuario[]
+  clientes      Cliente[]
+  veiculos      Veiculo[]
+  ordens        OrdemServico[]
+  orcamentos    Orcamento[]
+  pecas         Peca[]
+  movimentacoes MovimentacaoEstoque[]
+  contasReceber ContaReceber[]
+  contasPagar   ContaPagar[]
+  assinatura    Assinatura?
+  auditLogs     AuditLog[]
+
+  @@map("oficinas")
+}
+
+// Administrador master da plataforma (nao pertence a nenhuma oficina)
+model SuperAdmin {
+  id         String   @id @default(cuid())
+  nome       String
+  email      String   @unique
+  senhaHash  String
+  createdAt  DateTime @default(now())
+
+  @@map("super_admins")
+}
+
+model Plano {
+  id               String   @id @default(cuid())
+  nome             String   @unique // Basico | Profissional | Premium
+  precoMensal      Decimal  @db.Decimal(10, 2)
+  limiteUsuarios   Int
+  recursos         Json     // lista de recursos habilitados nesse plano
+  createdAt        DateTime @default(now())
+
+  assinaturas Assinatura[]
+
+  @@map("planos")
+}
+
+enum StatusAssinatura {
+  TRIAL
+  ATIVA
+  INADIMPLENTE
+  CANCELADA
+}
+
+enum ProvedorPagamento {
+  STRIPE
+  MERCADO_PAGO
+  ASAAS
+}
+
+model Assinatura {
+  id                String            @id @default(cuid())
+  oficinaId         String            @unique
+  oficina           Oficina           @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  planoId           String
+  plano             Plano             @relation(fields: [planoId], references: [id])
+  status            StatusAssinatura  @default(TRIAL)
+  provedor          ProvedorPagamento?
+  externalId        String?           // id da assinatura no Stripe/Mercado Pago/Asaas
+  trialEndsAt       DateTime?
+  currentPeriodEnd  DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@map("assinaturas")
+}
+
+// ===== Usuarios e permissoes =====
+
+enum PerfilUsuario {
+  ADMIN
+  GERENTE
+  ATENDENTE
+  MECANICO
+}
+
+model Usuario {
+  id         String        @id @default(cuid())
+  oficinaId  String
+  oficina    Oficina       @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  nome       String
+  email      String        @unique
+  senhaHash  String
+  cargo      String?       // funcao real: Pintor, Funileiro, Ajudante, Mecanico Preparador etc — texto livre
+  perfil     PerfilUsuario @default(ATENDENTE)
+  ativo      Boolean       @default(true)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  ordensComoMecanico OrdemServico[] @relation("MecanicoResponsavel")
+  auditLogs          AuditLog[]
+  codigosRecuperacao CodigoRecuperacaoSenha[]
+
+  @@index([oficinaId])
+  @@map("usuarios")
+}
+
+// Codigo de 6 digitos enviado por e-mail para redefinicao de senha.
+// O codigo em si nunca e armazenado em texto puro — apenas seu hash,
+// igual a senha — para que um vazamento do banco nao exponha os codigos.
+model CodigoRecuperacaoSenha {
+  id          String    @id @default(cuid())
+  usuarioId   String
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  codigoHash  String
+  expiraEm    DateTime
+  usado       Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@index([usuarioId])
+  @@map("codigos_recuperacao_senha")
+}
+
+// ===== Clientes e veiculos =====
+
+model Cliente {
+  id            String    @id @default(cuid())
+  oficinaId     String
+  oficina       Oficina   @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  nome          String
+  cpfCnpj       String?
+  telefone      String?
+  whatsapp      String?
+  email         String?
+  endereco      String?
+  observacoes   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  veiculos      Veiculo[]
+  ordens        OrdemServico[]
+  orcamentos    Orcamento[]
+  contasReceber ContaReceber[]
+
+  @@index([oficinaId])
+  @@map("clientes")
+}
+
+model Veiculo {
+  id         String   @id @default(cuid())
+  oficinaId  String
+  oficina    Oficina  @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  clienteId  String
+  cliente    Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  placa      String
+  marca      String?
+  modelo     String?
+  ano        Int?
+  cor        String?
+  km         Int?
+  chassi     String?
+  renavam    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  ordens     OrdemServico[]
+  orcamentos Orcamento[]
+
+  @@index([oficinaId])
+  @@unique([oficinaId, placa])
+  @@map("veiculos")
+}
+
+// ===== Ordens de servico =====
+
+enum StatusOS {
+  ABERTA
+  EM_ANDAMENTO
+  AGUARDANDO_PECAS
+  AGUARDANDO_APROVACAO
+  FINALIZADA
+  ENTREGUE
+  CANCELADA
+  DESISTENCIA
+}
+
+model OrdemServico {
+  id                 String    @id @default(cuid())
+  oficinaId          String
+  oficina            Oficina   @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  numero             Int       // sequencial por oficina, gerado na aplicacao
+  clienteId          String
+  cliente            Cliente   @relation(fields: [clienteId], references: [id])
+  veiculoId          String
+  veiculo            Veiculo   @relation(fields: [veiculoId], references: [id])
+  mecanicoId         String?
+  mecanico           Usuario?  @relation("MecanicoResponsavel", fields: [mecanicoId], references: [id])
+  descricaoProblema  String?
+  servicosExecutados String?
+  observacoes        String?
+  status             StatusOS  @default(ABERTA)
+  fotos              String[]  @default([])
+  assinaturaDigital  String?   // URL/base64 da assinatura do cliente
+  dataAbertura       DateTime  @default(now())
+  dataEntrega        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  itens         ItemOrdemServico[]
+  contasReceber ContaReceber[]
+  movimentacoes MovimentacaoEstoque[]
+
+  @@index([oficinaId])
+  @@unique([oficinaId, numero])
+  @@map("ordens_servico")
+}
+
+enum TipoItem {
+  PECA
+  MAO_DE_OBRA
+}
+
+model ItemOrdemServico {
+  id             String       @id @default(cuid())
+  ordemId        String
+  ordem          OrdemServico @relation(fields: [ordemId], references: [id], onDelete: Cascade)
+  tipo           TipoItem
+  pecaId         String?
+  peca           Peca?        @relation(fields: [pecaId], references: [id])
+  descricao      String
+  quantidade     Int          @default(1)
+  valorUnitario  Decimal      @db.Decimal(10, 2)
+
+  @@map("itens_ordem_servico")
+}
+
+// ===== Orcamentos =====
+
+enum StatusOrcamento {
+  PENDENTE
+  APROVADO
+  REPROVADO
+  CONVERTIDO
+}
+
+model Orcamento {
+  id         String          @id @default(cuid())
+  oficinaId  String
+  oficina    Oficina         @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  numero     Int
+  clienteId  String
+  cliente    Cliente         @relation(fields: [clienteId], references: [id])
+  veiculoId  String
+  veiculo    Veiculo         @relation(fields: [veiculoId], references: [id])
+  status     StatusOrcamento @default(PENDENTE)
+  desconto   Decimal         @db.Decimal(10, 2) @default(0)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  itens ItemOrcamento[]
+
+  @@index([oficinaId])
+  @@unique([oficinaId, numero])
+  @@map("orcamentos")
+}
+
+model ItemOrcamento {
+  id             String    @id @default(cuid())
+  orcamentoId    String
+  orcamento      Orcamento @relation(fields: [orcamentoId], references: [id], onDelete: Cascade)
+  tipo           TipoItem
+  descricao      String
+  quantidade     Int       @default(1)
+  valorUnitario  Decimal   @db.Decimal(10, 2)
+
+  @@map("itens_orcamento")
+}
+
+// ===== Estoque =====
+
+model Peca {
+  id             String   @id @default(cuid())
+  oficinaId      String
+  oficina        Oficina  @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  codigo         String
+  nome           String
+  categoria      String?
+  fornecedor     String?
+  quantidade     Int      @default(0)
+  estoqueMinimo  Int      @default(0)
+  valorCompra    Decimal  @db.Decimal(10, 2)
+  valorVenda     Decimal  @db.Decimal(10, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  itensOS        ItemOrdemServico[]
+  movimentacoes  MovimentacaoEstoque[]
+
+  @@index([oficinaId])
+  @@unique([oficinaId, codigo])
+  @@map("pecas")
+}
+
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
+}
+
+model MovimentacaoEstoque {
+  id         String           @id @default(cuid())
+  oficinaId  String
+  oficina    Oficina          @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  pecaId     String
+  peca       Peca             @relation(fields: [pecaId], references: [id])
+  tipo       TipoMovimentacao
+  quantidade Int
+  motivo     String?          // ex: "Uso na OS-1042", "Compra fornecedor X"
+  ordemId    String?
+  ordem      OrdemServico?    @relation(fields: [ordemId], references: [id])
+  createdAt  DateTime         @default(now())
+
+  @@index([oficinaId])
+  @@map("movimentacoes_estoque")
+}
+
+// ===== Financeiro =====
+
+enum StatusConta {
+  PENDENTE
+  PAGO
+  ATRASADO
+}
+
+model ContaReceber {
+  id          String      @id @default(cuid())
+  oficinaId   String
+  oficina     Oficina     @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  clienteId   String?
+  cliente     Cliente?    @relation(fields: [clienteId], references: [id])
+  ordemId     String?
+  ordem       OrdemServico? @relation(fields: [ordemId], references: [id])
+  descricao   String
+  valor       Decimal     @db.Decimal(10, 2)
+  vencimento  DateTime
+  status      StatusConta @default(PENDENTE)
+  pagoEm      DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([oficinaId])
+  @@map("contas_receber")
+}
+
+enum TipoDespesa {
+  FIXA
+  VARIAVEL
+}
+
+model ContaPagar {
+  id          String      @id @default(cuid())
+  oficinaId   String
+  oficina     Oficina     @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  fornecedor  String
+  descricao   String
+  valor       Decimal     @db.Decimal(10, 2)
+  tipo        TipoDespesa @default(VARIAVEL) // Fixa (aluguel, salario) ou Variavel (peca avulsa, manutencao pontual)
+  vencimento  DateTime
+  status      StatusConta @default(PENDENTE)
+  pagoEm      DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([oficinaId])
+  @@map("contas_pagar")
+}
+
+// ===== Auditoria =====
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  oficinaId   String
+  oficina     Oficina  @relation(fields: [oficinaId], references: [id], onDelete: Cascade)
+  usuarioId   String?
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+  acao        String   // ex: "CRIAR_OS", "ALTERAR_STATUS_OS", "LOGIN"
+  entidade    String?  // ex: "OrdemServico"
+  entidadeId  String?
+  detalhes    Json?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  @@index([oficinaId])
+  @@map("audit_logs")
+}
