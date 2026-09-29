@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { setTokens } from "./api";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -3097,9 +3096,6 @@ function Login({ goSignup, goLanding, goForgot, onSuccess, mensagemSucesso }) {
       setCarregando(false);
     }
   };
-}
-```
-
 
   return (
     <AuthShell goLanding={goLanding}>
