@@ -1,9 +1,5 @@
 const { verifyAccessToken } = require("../utils/jwt");
 
-// Exige um usuario autenticado de uma oficina (tenant).
-// Anexa req.user = { id, oficinaId, perfil } — toda query subsequente
-// nos controllers DEVE filtrar por req.user.oficinaId. Isso e o que garante
-// o isolamento multi-tenant: nunca confiar em um oficinaId vindo do body/query.
 function authenticate(req, res, next) {
   const header = req.headers.authorization;
 
@@ -24,7 +20,11 @@ function authenticate(req, res, next) {
 
     return next();
   } catch (err) {
-    console.error("ERRO JWT:", err);
-    return res.status(401).json({ erro: "Token invalido ou expirado." });
+    console.error("ERRO JWT:", err.message);
+    return res.status(401).json({
+      erro: "Token invalido ou expirado.",
+    });
   }
 }
+
+module.exports = authenticate;
