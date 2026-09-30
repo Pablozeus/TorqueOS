@@ -3026,20 +3026,39 @@ function Landing({ goLogin, goSignup }) {
         </div>
       </section>
 
-      <footer className="bg-slate-900 text-slate-400 py-12">
-        <div className="max-w-6xl mx-auto px-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div>
-            <div className="font-display text-lg text-white">
-              TORQUE<span className="text-orange-500">OS</span>
-            </div>
-            <div className="text-sm mt-1">Sistema de gestão para oficinas mecânicas.</div>
-          </div>
-          <button onClick={goSignup} className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-md">
-            <MessageCircle size={16} /> Falar no WhatsApp
-          </button>
-        </div>
-        <div className="max-w-6xl mx-auto px-5 mt-8 pt-6 border-t border-slate-800 text-xs">© 2026 TorqueOS. Todos os direitos reservados.</div>
-      </footer>
+      ```jsx
+<footer className="bg-slate-900 text-slate-400 py-12">
+  <div className="max-w-6xl mx-auto px-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div>
+      <div className="font-display text-lg text-white">
+        TORQUE<span className="text-orange-500">OS</span>
+      </div>
+
+      <div className="text-sm mt-1">
+        Sistema de gestão para oficinas mecânicas.
+      </div>
+    </div>
+
+    <button
+      onClick={() =>
+        window.open(
+          "https://wa.me/5571993311575?text=Olá%2C%20preciso%20de%20ajuda%20com%20minha%20conta%20no%20TorqueOS.",
+          "_blank"
+        )
+      }
+      className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-md"
+    >
+      <MessageCircle size={16} />
+      Falar no WhatsApp
+    </button>
+  </div>
+
+  <div className="max-w-6xl mx-auto px-5 mt-8 pt-6 border-t border-slate-800 text-xs">
+    © 2026 TorqueOS. Todos os direitos reservados.
+  </div>
+</footer>
+```
+
     </div>
   );
 }
