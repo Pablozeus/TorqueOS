@@ -15,13 +15,14 @@ const { authLimiter } = require("../middleware/rateLimiter");
 
 const router = express.Router();
 
-console.log("authenticate:", typeof authenticate);
-console.log("me:", typeof me);
-
 router.post("/signup", authLimiter, signup);
+
 router.post("/login", authLimiter, login);
+
 router.post("/refresh", authLimiter, refresh);
+
 router.post("/forgot-password", authLimiter, forgotPassword);
+
 router.post("/reset-password", authLimiter, resetPassword);
 
 router.get("/me", authenticate, me);

@@ -1,7 +1,7 @@
 {
-  "name": "torqueos-backend",
+  "name": "automevo-backend",
   "version": "1.0.0",
-  "description": "API REST multi-tenant do TorqueOS - sistema SaaS para oficinas mecanicas",
+  "description": "API REST multi-tenant da AUTOMEVO - sistema SaaS para oficinas mecanicas",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {

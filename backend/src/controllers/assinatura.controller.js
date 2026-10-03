@@ -66,7 +66,7 @@ async function assinar(req, res, next) {
     const assinaturaAsaas = await asaas.criarAssinaturaBoleto({
       customerId: asaasCustomerId,
       valor: Number(plano.precoMensal),
-      descricao: `TorqueOS — Plano ${plano.nome}`,
+      descricao: `AUTOMEVO — Plano ${plano.nome}`,
       diaVencimento: data.diaVencimento,
     });
 

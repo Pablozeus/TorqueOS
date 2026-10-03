@@ -1,12 +1,12 @@
-// Cliente HTTP central para falar com o backend do TorqueOS.
+// Cliente HTTP central para falar com o backend da AUTOMEVO.
 // Guarda o access token / refresh token no localStorage (projeto roda no
 // navegador do próprio usuário, então isso é seguro e é o padrão do mercado
 // para SPAs como essa).
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3333/api";
 
-const ACCESS_KEY = "torqueos_access_token";
-const REFRESH_KEY = "torqueos_refresh_token";
+const ACCESS_KEY = "automevo_access_token";
+const REFRESH_KEY = "automevo_refresh_token";
 
 export function getAccessToken() {
   return localStorage.getItem(ACCESS_KEY);

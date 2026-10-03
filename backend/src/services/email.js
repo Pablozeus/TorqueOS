@@ -1,6 +1,6 @@
 const { Resend } = require("resend");
 
-const FROM = process.env.EMAIL_FROM || "TorqueOS <onboarding@resend.dev>";
+const FROM = process.env.EMAIL_FROM || "AUTOMEVO <onboarding@resend.dev>";
 
 async function enviarCodigoRecuperacao({ para, nome, codigo }) {
   // Desenvolvimento sem chave do Resend
@@ -19,7 +19,7 @@ async function enviarCodigoRecuperacao({ para, nome, codigo }) {
     const resultado = await resend.emails.send({
       from: FROM,
       to: para,
-      subject: "Seu codigo para redefinir a senha - TorqueOS",
+      subject: "Seu codigo para redefinir a senha - AUTOMEVO",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
           <h2 style="color: #1e293b;">Redefinir senha</h2>
@@ -27,7 +27,7 @@ async function enviarCodigoRecuperacao({ para, nome, codigo }) {
           <p>Ola, ${nome || ""}.</p>
 
           <p>
-            Use o codigo abaixo para redefinir sua senha no TorqueOS.
+            Use o codigo abaixo para redefinir sua senha na AUTOMEVO.
             Ele expira em 15 minutos.
           </p>
 

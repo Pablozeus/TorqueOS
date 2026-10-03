@@ -38,24 +38,24 @@ async function main() {
   console.log(`Planos criados: ${planos.map((p) => p.nome).join(", ")}`);
 
   // Administrador master da plataforma
-  const masterEmail = process.env.MASTER_ADMIN_EMAIL || "admin@torqueos.com";
+  const masterEmail = process.env.MASTER_ADMIN_EMAIL || "admin@automevo.com";
   const masterSenha = process.env.MASTER_ADMIN_PASSWORD || "mude-esta-senha";
   await prisma.superAdmin.upsert({
     where: { email: masterEmail },
     update: {},
-    create: { nome: "Administrador TorqueOS", email: masterEmail, senhaHash: await bcrypt.hash(masterSenha, 10) },
+    create: { nome: "Administrador AUTOMEVO", email: masterEmail, senhaHash: await bcrypt.hash(masterSenha, 10) },
   });
   console.log(`Super admin pronto: ${masterEmail}`);
 
   // Oficina de demonstracao, com os mesmos dados mock usados no frontend
-  const oficinaExistente = await prisma.oficina.findFirst({ where: { email: "demo@torqueos.com" } });
+  const oficinaExistente = await prisma.oficina.findFirst({ where: { email: "demo@automevo.com" } });
   if (oficinaExistente) {
     console.log("Oficina de demonstracao ja existe, pulando criacao de dados de exemplo.");
     return;
   }
 
   const oficina = await prisma.oficina.create({
-    data: { nome: "Oficina Demonstracao", email: "demo@torqueos.com", status: "ATIVA" },
+    data: { nome: "Oficina Demonstracao", email: "demo@automevo.com", status: "ATIVA" },
   });
 
   await prisma.assinatura.create({
@@ -66,7 +66,7 @@ async function main() {
     data: {
       oficinaId: oficina.id,
       nome: "Guilherme",
-      email: "guilherme@torqueos.com",
+      email: "guilherme@automevo.com",
       senhaHash: await bcrypt.hash("123456", 10),
       perfil: "ADMIN",
     },
@@ -118,7 +118,7 @@ async function main() {
   });
 
   console.log("Seed concluido com sucesso.");
-  console.log(`Login de demonstracao -> e-mail: guilherme@torqueos.com | senha: 123456`);
+  console.log(`Login de demonstracao -> e-mail: guilherme@automevo.com | senha: 123456`);
 }
 
 main()

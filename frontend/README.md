@@ -1,4 +1,4 @@
-# TorqueOS — Frontend
+# AUTOMEVO — Frontend
 
 Projeto React (Vite + Tailwind CSS) com as telas do sistema: Landing Page,
 Login/Cadastro/Recuperação de senha, Dashboard, Ordens de Serviço, Clientes,
@@ -32,7 +32,7 @@ backend (pasta `backend/`) — não usa mais dados fixos em memória.
    preencha o formulário de cadastro — isso já cria a oficina de verdade
    no banco de dados através do backend. Você também pode entrar com a
    conta de demonstração criada pelo `npm run seed` do backend:
-   `guilherme@torqueos.com` / `123456`.
+   `guilherme@automevo.com` / `123456`.
 
 ## O que já está conectado à API de verdade
 

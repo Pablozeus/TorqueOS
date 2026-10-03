@@ -1,4 +1,4 @@
-# TorqueOS — API Backend
+# AUTOMEVO — API Backend
 
 API REST multi-tenant (Node.js + Express + PostgreSQL + Prisma) para o sistema
 de gestao de oficinas mecanicas. Cada oficina e um tenant isolado: todo dado
@@ -30,7 +30,7 @@ de negocio carrega `oficinaId` e toda query dos controllers filtra por
    ```bash
    npm run seed
    ```
-   Login de demonstracao criado pelo seed: `guilherme@torqueos.com` / `123456`
+   Login de demonstracao criado pelo seed: `guilherme@automevo.com` / `123456`
    Login do painel master: o e-mail/senha definidos em `MASTER_ADMIN_EMAIL` /
    `MASTER_ADMIN_PASSWORD` no `.env`.
 

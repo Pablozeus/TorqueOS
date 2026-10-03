@@ -1,4 +1,4 @@
-// Schema Prisma - TorqueOS
+// Schema Prisma - AUTOMEVO
 // Multi-tenant: toda tabela de negocio carrega oficinaId, garantindo isolamento
 // total de dados entre oficinas. O isolamento tambem e reforcado na camada de
 // aplicacao (todo find/update/delete filtra por oficinaId vindo do JWT).

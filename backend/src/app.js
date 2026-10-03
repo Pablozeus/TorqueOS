@@ -26,7 +26,7 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "https://torqueos-rm3g.onrender.com",
+    origin: process.env.CORS_ORIGIN || "https://automevo-rm3g.onrender.com",
     credentials: true,
   })
 );
